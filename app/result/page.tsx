@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 const recommendations = {
   출근: {
@@ -54,13 +51,27 @@ const recommendations = {
   },
 };
 
-export default function ResultPage() {
-  const searchParams = useSearchParams();
-  const situation = searchParams.get("situation") || "데이트";
+type Situation = keyof typeof recommendations;
 
-  const result =
-    recommendations[situation as keyof typeof recommendations] ||
-    recommendations.데이트;
+export default async function ResultPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    situation?: string | string[];
+  }>;
+}) {
+  const params = await searchParams;
+
+  const rawSituation = Array.isArray(params.situation)
+    ? params.situation[0]
+    : params.situation;
+
+  const situation: Situation =
+    rawSituation && rawSituation in recommendations
+      ? (rawSituation as Situation)
+      : "데이트";
+
+  const result = recommendations[situation];
 
   return (
     <main className="min-h-screen bg-gray-100 px-6 py-12">
