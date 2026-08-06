@@ -54,6 +54,14 @@ const dashboardMenus = [
     description: "옷 사진을 올리고 색상, 소재와 핏을 분석해보세요.",
     icon: "◉",
   },
+  {
+    href: "/chat",
+    eyebrow: "AI STYLE CONCIERGE",
+    title: "AI 스타일리스트",
+    description:
+      "날씨, 장소와 고민 중인 옷을 입력하고 대화형으로 추천받으세요.",
+    icon: "✦",
+  },
 ];
 
 function getWeatherDescription(code: number) {
@@ -256,7 +264,9 @@ export default function Home() {
     setErrorMessage("");
 
     if (!navigator.geolocation) {
-      setErrorMessage("현재 브라우저에서는 위치 정보를 사용할 수 없어요.");
+      setErrorMessage(
+        "현재 브라우저에서는 위치 정보를 사용할 수 없어요.",
+      );
       setIsWeatherLoading(false);
       return;
     }
@@ -287,7 +297,9 @@ export default function Home() {
           setWeather(currentWeather);
           createDashboardOutfit(items, currentWeather);
         } catch {
-          setErrorMessage("날씨 정보를 불러오는 중 오류가 발생했어요.");
+          setErrorMessage(
+            "날씨 정보를 불러오는 중 오류가 발생했어요.",
+          );
         } finally {
           setIsWeatherLoading(false);
         }
@@ -340,12 +352,18 @@ export default function Home() {
             FitMate AI
           </Link>
 
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-[#59635b] md:flex">
-            <Link href="/recommend" className="hover:text-[#18372d]">
+          <nav className="hidden items-center gap-7 text-sm font-semibold text-[#59635b] md:flex">
+            <Link
+              href="/recommend"
+              className="hover:text-[#18372d]"
+            >
               Style
             </Link>
 
-            <Link href="/closet" className="hover:text-[#18372d]">
+            <Link
+              href="/closet"
+              className="hover:text-[#18372d]"
+            >
               Wardrobe
             </Link>
 
@@ -356,8 +374,18 @@ export default function Home() {
               Recommendation
             </Link>
 
-            <Link href="/analyze" className="hover:text-[#18372d]">
+            <Link
+              href="/analyze"
+              className="hover:text-[#18372d]"
+            >
               Analysis
+            </Link>
+
+            <Link
+              href="/chat"
+              className="hover:text-[#18372d]"
+            >
+              AI Stylist
             </Link>
           </nav>
         </div>
@@ -390,10 +418,10 @@ export default function Home() {
               </Link>
 
               <Link
-                href="/closet"
+                href="/chat"
                 className="rounded-full border border-[#d9d0bf] px-7 py-4 text-center font-bold transition hover:bg-white/10"
               >
-                옷 등록하기
+                AI 스타일리스트와 대화
               </Link>
             </div>
           </div>
@@ -412,7 +440,9 @@ export default function Home() {
                 </div>
 
                 <div className="text-5xl">
-                  {weather ? getWeatherIcon(weather.weatherCode) : "🌤️"}
+                  {weather
+                    ? getWeatherIcon(weather.weatherCode)
+                    : "🌤️"}
                 </div>
               </div>
 
@@ -448,7 +478,9 @@ export default function Home() {
 
                   <div className="mt-5 grid grid-cols-2 gap-4">
                     <div className="rounded-2xl bg-[#f8f2e7] p-4">
-                      <p className="text-xs text-[#786f61]">체감온도</p>
+                      <p className="text-xs text-[#786f61]">
+                        체감온도
+                      </p>
                       <p className="mt-1 font-serif text-2xl font-bold">
                         {Math.round(weather.apparentTemperature)}°
                       </p>
@@ -498,45 +530,45 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-3xl border border-[#b9aa90] bg-[#f8f2e7] p-6">
-            <p className="text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
-              TOTAL ITEMS
-            </p>
-            <p className="mt-3 font-serif text-4xl font-bold">
-              {isLoaded ? items.length : 0}
-            </p>
-            <p className="mt-2 text-sm text-[#687169]">등록된 전체 옷</p>
-          </div>
+          {[
+            {
+              label: "TOTAL ITEMS",
+              value: isLoaded ? items.length : 0,
+              description: "등록된 전체 옷",
+            },
+            {
+              label: "TOPS",
+              value: categoryCount("상의"),
+              description: "등록된 상의",
+            },
+            {
+              label: "BOTTOMS",
+              value: categoryCount("하의"),
+              description: "등록된 하의",
+            },
+            {
+              label: "SHOES",
+              value: categoryCount("신발"),
+              description: "등록된 신발",
+            },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-3xl border border-[#b9aa90] bg-[#f8f2e7] p-6"
+            >
+              <p className="text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
+                {stat.label}
+              </p>
 
-          <div className="rounded-3xl border border-[#b9aa90] bg-[#f8f2e7] p-6">
-            <p className="text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
-              TOPS
-            </p>
-            <p className="mt-3 font-serif text-4xl font-bold">
-              {categoryCount("상의")}
-            </p>
-            <p className="mt-2 text-sm text-[#687169]">등록된 상의</p>
-          </div>
+              <p className="mt-3 font-serif text-4xl font-bold">
+                {stat.value}
+              </p>
 
-          <div className="rounded-3xl border border-[#b9aa90] bg-[#f8f2e7] p-6">
-            <p className="text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
-              BOTTOMS
-            </p>
-            <p className="mt-3 font-serif text-4xl font-bold">
-              {categoryCount("하의")}
-            </p>
-            <p className="mt-2 text-sm text-[#687169]">등록된 하의</p>
-          </div>
-
-          <div className="rounded-3xl border border-[#b9aa90] bg-[#f8f2e7] p-6">
-            <p className="text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
-              SHOES
-            </p>
-            <p className="mt-3 font-serif text-4xl font-bold">
-              {categoryCount("신발")}
-            </p>
-            <p className="mt-2 text-sm text-[#687169]">등록된 신발</p>
-          </div>
+              <p className="mt-2 text-sm text-[#687169]">
+                {stat.description}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -562,7 +594,9 @@ export default function Home() {
             {items.length > 0 && (
               <button
                 type="button"
-                onClick={() => createDashboardOutfit(items, weather)}
+                onClick={() =>
+                  createDashboardOutfit(items, weather)
+                }
                 className="rounded-full bg-[#d3b16c] px-6 py-3 font-bold text-[#18372d] transition hover:bg-[#e2c789] active:scale-[0.98]"
               >
                 다른 조합 보기
@@ -579,7 +613,8 @@ export default function Home() {
               </h3>
 
               <p className="mt-2 text-[#687169]">
-                상의, 하의와 신발을 등록하면 이곳에 추천 코디가 표시돼요.
+                상의, 하의와 신발을 등록하면 이곳에 추천 코디가
+                표시돼요.
               </p>
 
               <Link
@@ -603,7 +638,9 @@ export default function Home() {
                       key={part.label}
                       className="rounded-3xl border border-[#c5b69d] bg-white p-6"
                     >
-                      <div className="text-5xl">{part.icon}</div>
+                      <div className="text-5xl">
+                        {part.icon}
+                      </div>
 
                       <p className="mt-5 text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
                         {part.label}
@@ -641,9 +678,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-6 pb-16 lg:grid-cols-[0.85fr_1.15fr]">
+      <section className="mx-auto grid max-w-7xl gap-8 px-6 pb-16 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="rounded-[2rem] border border-[#b9aa90] bg-[#f8f2e7] p-7">
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
                 RECENT WARDROBE
@@ -680,13 +717,13 @@ export default function Home() {
               {recentItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-2xl border border-[#c5b69d] bg-white p-4"
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-[#c5b69d] bg-white p-4"
                 >
                   <span className="text-xs font-semibold tracking-[0.18em] text-[#8a6e39]">
                     {item.category}
                   </span>
 
-                  <span className="font-serif text-lg font-bold">
+                  <span className="text-right font-serif text-lg font-bold">
                     {item.name}
                   </span>
                 </div>
@@ -711,7 +748,7 @@ export default function Home() {
                 href={menu.href}
                 className="group rounded-[1.75rem] border border-[#b9aa90] bg-[#f8f2e7] p-6 transition hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold tracking-[0.18em] text-[#8a6e39]">
                       {menu.eyebrow}
@@ -744,7 +781,10 @@ export default function Home() {
         <p className="font-serif text-lg font-bold text-[#f5eddd]">
           FitMate AI
         </p>
-        <p className="mt-2">Classic style, thoughtfully curated.</p>
+
+        <p className="mt-2">
+          Classic style, thoughtfully curated.
+        </p>
       </footer>
     </main>
   );
