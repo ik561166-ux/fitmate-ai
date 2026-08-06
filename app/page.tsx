@@ -16,6 +16,13 @@ type WeatherData = {
   weatherCode: number;
 };
 
+type DashboardOutfit = {
+  top?: ClothingItem;
+  bottom?: ClothingItem;
+  shoes?: ClothingItem;
+  outer?: ClothingItem;
+};
+
 const STORAGE_KEY = "fitmate-closet-items";
 
 const dashboardMenus = [
@@ -113,19 +120,129 @@ function getStyleAdvice(temperature: number, weatherCode: number) {
   return "코트나 패딩처럼 따뜻한 아우터가 필요한 날씨예요.";
 }
 
+function pickRandomItem(items: ClothingItem[]) {
+  if (items.length === 0) return undefined;
+
+  const randomIndex = Math.floor(Math.random() * items.length);
+  return items[randomIndex];
+}
+
+function getItemsByCategory(
+  items: ClothingItem[],
+  category: string,
+  temperature?: number,
+) {
+  const categoryItems = items.filter(
+    (item) => item.category === category,
+  );
+
+  if (temperature === undefined) {
+    return categoryItems;
+  }
+
+  const hotWeatherAvoid = [
+    "패딩",
+    "코트",
+    "기모",
+    "울",
+    "목폴라",
+    "두꺼운",
+  ];
+
+  const coldWeatherAvoid = [
+    "반팔",
+    "민소매",
+    "반바지",
+    "린넨 반바지",
+  ];
+
+  if (temperature >= 27) {
+    const suitableItems = categoryItems.filter(
+      (item) =>
+        !hotWeatherAvoid.some((keyword) =>
+          item.name.includes(keyword),
+        ),
+    );
+
+    return suitableItems.length > 0
+      ? suitableItems
+      : categoryItems;
+  }
+
+  if (temperature <= 12) {
+    const suitableItems = categoryItems.filter(
+      (item) =>
+        !coldWeatherAvoid.some((keyword) =>
+          item.name.includes(keyword),
+        ),
+    );
+
+    return suitableItems.length > 0
+      ? suitableItems
+      : categoryItems;
+  }
+
+  return categoryItems;
+}
+
 export default function Home() {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [outfit, setOutfit] = useState<DashboardOutfit>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isWeatherLoading, setIsWeatherLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const createDashboardOutfit = (
+    closetItems: ClothingItem[],
+    currentWeather?: WeatherData | null,
+  ) => {
+    const temperature = currentWeather?.temperature;
+
+    const tops = getItemsByCategory(
+      closetItems,
+      "상의",
+      temperature,
+    );
+
+    const bottoms = getItemsByCategory(
+      closetItems,
+      "하의",
+      temperature,
+    );
+
+    const shoes = getItemsByCategory(
+      closetItems,
+      "신발",
+      temperature,
+    );
+
+    const outers =
+      temperature !== undefined && temperature >= 23
+        ? []
+        : getItemsByCategory(
+            closetItems,
+            "아우터",
+            temperature,
+          );
+
+    setOutfit({
+      top: pickRandomItem(tops),
+      bottom: pickRandomItem(bottoms),
+      shoes: pickRandomItem(shoes),
+      outer: pickRandomItem(outers),
+    });
+  };
 
   useEffect(() => {
     const savedItems = localStorage.getItem(STORAGE_KEY);
 
     if (savedItems) {
       try {
-        setItems(JSON.parse(savedItems));
+        const parsedItems: ClothingItem[] = JSON.parse(savedItems);
+
+        setItems(parsedItems);
+        createDashboardOutfit(parsedItems);
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -159,12 +276,16 @@ export default function Home() {
 
           const data = await response.json();
 
-          setWeather({
+          const currentWeather: WeatherData = {
             temperature: data.current.temperature_2m,
-            apparentTemperature: data.current.apparent_temperature,
+            apparentTemperature:
+              data.current.apparent_temperature,
             humidity: data.current.relative_humidity_2m,
             weatherCode: data.current.weather_code,
-          });
+          };
+
+          setWeather(currentWeather);
+          createDashboardOutfit(items, currentWeather);
         } catch {
           setErrorMessage("날씨 정보를 불러오는 중 오류가 발생했어요.");
         } finally {
@@ -185,11 +306,37 @@ export default function Home() {
 
   const recentItems = [...items].reverse().slice(0, 3);
 
+  const outfitParts = [
+    {
+      label: "상의",
+      icon: "👕",
+      item: outfit.top,
+    },
+    {
+      label: "하의",
+      icon: "👖",
+      item: outfit.bottom,
+    },
+    {
+      label: "신발",
+      icon: "👞",
+      item: outfit.shoes,
+    },
+    {
+      label: "아우터",
+      icon: "🧥",
+      item: outfit.outer,
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-[#eee6d8] text-[#1d2c25]">
       <header className="border-b border-[#b9aa90] bg-[#f8f2e7]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <Link href="/" className="font-serif text-2xl font-bold tracking-wide">
+          <Link
+            href="/"
+            className="font-serif text-2xl font-bold tracking-wide"
+          >
             FitMate AI
           </Link>
 
@@ -202,7 +349,10 @@ export default function Home() {
               Wardrobe
             </Link>
 
-            <Link href="/closet-recommend" className="hover:text-[#18372d]">
+            <Link
+              href="/closet-recommend"
+              className="hover:text-[#18372d]"
+            >
               Recommendation
             </Link>
 
@@ -390,6 +540,107 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-7xl px-6 pb-12">
+        <div className="rounded-[2rem] border border-[#b9aa90] bg-[#f8f2e7] p-7 shadow-sm md:p-9">
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.22em] text-[#8a6e39]">
+                TODAY&apos;S WARDROBE EDIT
+              </p>
+
+              <h2 className="mt-3 font-serif text-4xl font-bold">
+                오늘의 추천 코디
+              </h2>
+
+              <p className="mt-3 text-[#687169]">
+                {weather
+                  ? "현재 날씨와 등록한 옷을 반영한 조합이에요."
+                  : "등록한 옷을 기준으로 만든 조합이에요. 날씨를 확인하면 더 알맞게 추천해요."}
+              </p>
+            </div>
+
+            {items.length > 0 && (
+              <button
+                type="button"
+                onClick={() => createDashboardOutfit(items, weather)}
+                className="rounded-full bg-[#d3b16c] px-6 py-3 font-bold text-[#18372d] transition hover:bg-[#e2c789] active:scale-[0.98]"
+              >
+                다른 조합 보기
+              </button>
+            )}
+          </div>
+
+          {items.length === 0 ? (
+            <div className="mt-8 rounded-3xl border border-dashed border-[#b9aa90] bg-[#eee4d3] p-10 text-center">
+              <div className="text-5xl">♞</div>
+
+              <h3 className="mt-4 font-serif text-2xl font-bold">
+                먼저 옷을 등록해주세요.
+              </h3>
+
+              <p className="mt-2 text-[#687169]">
+                상의, 하의와 신발을 등록하면 이곳에 추천 코디가 표시돼요.
+              </p>
+
+              <Link
+                href="/closet"
+                className="mt-6 inline-block rounded-full bg-[#18372d] px-7 py-4 font-bold text-[#f8f1e2]"
+              >
+                옷 등록하러 가기
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {outfitParts.map((part) => {
+                  const outerCanBeSkipped =
+                    part.label === "아우터" &&
+                    weather &&
+                    weather.temperature >= 23;
+
+                  return (
+                    <article
+                      key={part.label}
+                      className="rounded-3xl border border-[#c5b69d] bg-white p-6"
+                    >
+                      <div className="text-5xl">{part.icon}</div>
+
+                      <p className="mt-5 text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
+                        {part.label}
+                      </p>
+
+                      <h3 className="mt-2 font-serif text-xl font-bold">
+                        {part.item
+                          ? part.item.name
+                          : outerCanBeSkipped
+                            ? "오늘은 생략 가능"
+                            : `${part.label} 미등록`}
+                      </h3>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                <Link
+                  href="/closet-recommend"
+                  className="rounded-2xl bg-[#18372d] px-6 py-4 text-center font-bold text-[#f8f1e2] transition hover:bg-[#244b3f]"
+                >
+                  자세한 추천 보기
+                </Link>
+
+                <Link
+                  href="/closet"
+                  className="rounded-2xl border border-[#9f927b] px-6 py-4 text-center font-bold transition hover:border-[#18372d]"
+                >
+                  내 옷장 수정하기
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
       <section className="mx-auto grid max-w-7xl gap-8 px-6 pb-16 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="rounded-[2rem] border border-[#b9aa90] bg-[#f8f2e7] p-7">
           <div className="flex items-end justify-between">
@@ -445,15 +696,13 @@ export default function Home() {
         </div>
 
         <div>
-          <div>
-            <p className="text-xs font-semibold tracking-[0.22em] text-[#8a6e39]">
-              FITMATE SERVICES
-            </p>
+          <p className="text-xs font-semibold tracking-[0.22em] text-[#8a6e39]">
+            FITMATE SERVICES
+          </p>
 
-            <h2 className="mt-3 font-serif text-4xl font-bold">
-              스타일 도구
-            </h2>
-          </div>
+          <h2 className="mt-3 font-serif text-4xl font-bold">
+            스타일 도구
+          </h2>
 
           <div className="mt-7 grid gap-5 sm:grid-cols-2">
             {dashboardMenus.map((menu) => (
