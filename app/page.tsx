@@ -23,7 +23,17 @@ type DashboardOutfit = {
   outer?: ClothingItem;
 };
 
+type SavedOutfit = {
+  id: number;
+  top?: string;
+  bottom?: string;
+  shoes?: string;
+  outer?: string;
+  createdAt: string;
+};
+
 const STORAGE_KEY = "fitmate-closet-items";
+const FAVORITES_KEY = "fitmate-favorite-outfits";
 
 const dashboardMenus = [
   {
@@ -208,6 +218,7 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isWeatherLoading, setIsWeatherLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [savedMessage, setSavedMessage] = useState("");
 
   const createDashboardOutfit = (
     closetItems: ClothingItem[],
@@ -248,6 +259,8 @@ export default function Home() {
       shoes: pickRandomItem(shoes),
       outer: pickRandomItem(outers),
     });
+
+    setSavedMessage("");
   };
 
   useEffect(() => {
@@ -266,6 +279,45 @@ export default function Home() {
 
     setIsLoaded(true);
   }, []);
+
+  const saveCurrentOutfit = () => {
+    if (!outfit.top && !outfit.bottom && !outfit.shoes && !outfit.outer) {
+      return;
+    }
+
+    const saved = localStorage.getItem(FAVORITES_KEY);
+
+    let currentFavorites: SavedOutfit[] = [];
+
+    if (saved) {
+      try {
+        currentFavorites = JSON.parse(saved);
+      } catch {
+        currentFavorites = [];
+      }
+    }
+
+    const newOutfit: SavedOutfit = {
+      id: Date.now(),
+      top: outfit.top?.name,
+      bottom: outfit.bottom?.name,
+      shoes: outfit.shoes?.name,
+      outer: outfit.outer?.name,
+      createdAt: new Date().toLocaleString("ko-KR"),
+    };
+
+    const updatedFavorites = [
+      newOutfit,
+      ...currentFavorites,
+    ];
+
+    localStorage.setItem(
+      FAVORITES_KEY,
+      JSON.stringify(updatedFavorites),
+    );
+
+    setSavedMessage("코디를 저장했어요 ♡");
+  };
 
   const loadWeather = () => {
     setIsWeatherLoading(true);
@@ -418,10 +470,10 @@ export default function Home() {
               </Link>
 
               <Link
-                href="/chat"
+                href="/favorites"
                 className="rounded-full border border-[#d9d0bf] px-7 py-4 text-center font-bold transition hover:bg-white/10"
               >
-                AI 스타일리스트와 대화
+                저장한 코디 보기
               </Link>
             </div>
           </div>
@@ -510,15 +562,6 @@ export default function Home() {
                       )}
                     </p>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={loadWeather}
-                    disabled={isWeatherLoading}
-                    className="mt-5 w-full rounded-full border border-[#988b74] px-5 py-3 font-semibold transition hover:border-[#18372d] disabled:opacity-60"
-                  >
-                    날씨 새로고침
-                  </button>
                 </div>
               )}
 
@@ -601,73 +644,54 @@ export default function Home() {
                 onClick={() =>
                   createDashboardOutfit(items, weather)
                 }
-                className="rounded-full bg-[#d3b16c] px-6 py-3 font-bold text-[#18372d] transition hover:bg-[#e2c789] active:scale-[0.98]"
+                className="rounded-full bg-[#d3b16c] px-6 py-3 font-bold text-[#18372d] transition hover:bg-[#e2c789]"
               >
                 다른 조합 보기
               </button>
             )}
           </div>
 
-          {items.length === 0 ? (
-            <div className="mt-8 rounded-3xl border border-dashed border-[#b9aa90] bg-[#eee4d3] p-10 text-center">
-              <div className="text-5xl">♞</div>
-
-              <h3 className="mt-4 font-serif text-2xl font-bold">
-                먼저 옷을 등록해주세요.
-              </h3>
-
-              <p className="mt-2 text-[#687169]">
-                상의, 하의와 신발을 등록하면 이곳에 추천 코디가
-                표시돼요.
-              </p>
-
-              <Link
-                href="/closet"
-                className="mt-6 inline-block rounded-full bg-[#18372d] px-7 py-4 font-bold text-[#f8f1e2]"
-              >
-                옷 등록하러 가기
-              </Link>
-            </div>
-          ) : (
+          {items.length > 0 && (
             <>
               <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {outfitParts.map((part) => {
-                  const outerCanBeSkipped =
-                    part.label === "아우터" &&
-                    weather &&
-                    weather.temperature >= 23;
+                {outfitParts.map((part) => (
+                  <article
+                    key={part.label}
+                    className="rounded-3xl border border-[#c5b69d] bg-white p-6"
+                  >
+                    <div className="text-5xl">{part.icon}</div>
 
-                  return (
-                    <article
-                      key={part.label}
-                      className="rounded-3xl border border-[#c5b69d] bg-white p-6"
-                    >
-                      <div className="text-5xl">
-                        {part.icon}
-                      </div>
+                    <p className="mt-5 text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
+                      {part.label}
+                    </p>
 
-                      <p className="mt-5 text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
-                        {part.label}
-                      </p>
-
-                      <h3 className="mt-2 font-serif text-xl font-bold">
-                        {part.item
-                          ? part.item.name
-                          : outerCanBeSkipped
-                            ? "오늘은 생략 가능"
-                            : `${part.label} 미등록`}
-                      </h3>
-                    </article>
-                  );
-                })}
+                    <h3 className="mt-2 font-serif text-xl font-bold">
+                      {part.item
+                        ? part.item.name
+                        : part.label === "아우터" &&
+                            weather &&
+                            weather.temperature >= 23
+                          ? "오늘은 생략 가능"
+                          : `${part.label} 미등록`}
+                    </h3>
+                  </article>
+                ))}
               </div>
 
-              <div className="mt-7 grid gap-4 sm:grid-cols-3">
-                <Link
-                  href="/closet-recommend"
-                  className="rounded-2xl bg-[#18372d] px-6 py-4 text-center font-bold text-[#f8f1e2] transition hover:bg-[#244b3f]"
+              <div className="mt-7 grid gap-4 md:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={saveCurrentOutfit}
+                  className="rounded-2xl bg-[#d3b16c] px-6 py-4 font-bold text-[#18372d] transition hover:bg-[#e2c789]"
                 >
-                  자세한 추천 보기
+                  ♡ 이 코디 저장
+                </button>
+
+                <Link
+                  href="/favorites"
+                  className="rounded-2xl border border-[#9f927b] px-6 py-4 text-center font-bold transition hover:border-[#18372d]"
+                >
+                  저장한 코디 보기
                 </Link>
 
                 <Link
@@ -676,14 +700,13 @@ export default function Home() {
                 >
                   내 옷장 수정하기
                 </Link>
-
-                <Link
-                  href="/favorites"
-                  className="rounded-2xl border border-[#9f927b] px-6 py-4 text-center font-bold transition hover:border-[#18372d]"
-                >
-                  ♡ 저장한 코디 보기
-                </Link>
               </div>
+
+              {savedMessage && (
+                <div className="mt-5 rounded-2xl bg-[#e5d7bd] p-4 text-center font-semibold text-[#18372d]">
+                  {savedMessage}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -691,56 +714,30 @@ export default function Home() {
 
       <section className="mx-auto grid max-w-7xl gap-8 px-6 pb-16 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="rounded-[2rem] border border-[#b9aa90] bg-[#f8f2e7] p-7">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
-                RECENT WARDROBE
-              </p>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[#8a6e39]">
+            RECENT WARDROBE
+          </p>
 
-              <h2 className="mt-3 font-serif text-3xl font-bold">
-                최근 등록한 옷
-              </h2>
-            </div>
+          <h2 className="mt-3 font-serif text-3xl font-bold">
+            최근 등록한 옷
+          </h2>
 
-            <Link
-              href="/closet"
-              className="text-sm font-semibold text-[#18372d] hover:underline"
-            >
-              전체 보기
-            </Link>
-          </div>
-
-          {recentItems.length === 0 ? (
-            <div className="mt-7 rounded-3xl border border-dashed border-[#b9aa90] bg-[#eee4d3] p-8 text-center">
-              <p className="font-serif text-xl font-bold">
-                아직 등록된 옷이 없어요.
-              </p>
-
-              <Link
-                href="/closet"
-                className="mt-5 inline-block rounded-full bg-[#18372d] px-6 py-3 font-bold text-[#f8f1e2]"
+          <div className="mt-7 space-y-3">
+            {recentItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-4 rounded-2xl border border-[#c5b69d] bg-white p-4"
               >
-                첫 옷 등록하기
-              </Link>
-            </div>
-          ) : (
-            <div className="mt-7 space-y-3">
-              {recentItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between gap-4 rounded-2xl border border-[#c5b69d] bg-white p-4"
-                >
-                  <span className="text-xs font-semibold tracking-[0.18em] text-[#8a6e39]">
-                    {item.category}
-                  </span>
+                <span className="text-xs font-semibold tracking-[0.18em] text-[#8a6e39]">
+                  {item.category}
+                </span>
 
-                  <span className="text-right font-serif text-lg font-bold">
-                    {item.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                <span className="font-serif text-lg font-bold">
+                  {item.name}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div>
@@ -770,7 +767,7 @@ export default function Home() {
                     </h3>
                   </div>
 
-                  <span className="text-4xl text-[#a47d3f] transition group-hover:scale-110">
+                  <span className="text-4xl text-[#a47d3f]">
                     {menu.icon}
                   </span>
                 </div>
