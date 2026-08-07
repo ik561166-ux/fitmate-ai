@@ -62,6 +62,14 @@ const dashboardMenus = [
       "날씨, 장소와 고민 중인 옷을 입력하고 대화형으로 추천받으세요.",
     icon: "✦",
   },
+  {
+    href: "/favorites",
+    eyebrow: "SAVED LOOKS",
+    title: "저장한 코디",
+    description:
+      "마음에 든 코디를 저장해두고 언제든 다시 확인하세요.",
+    icon: "♡",
+  },
 ];
 
 function getWeatherDescription(code: number) {
@@ -353,17 +361,11 @@ export default function Home() {
           </Link>
 
           <nav className="hidden items-center gap-7 text-sm font-semibold text-[#59635b] md:flex">
-            <Link
-              href="/recommend"
-              className="hover:text-[#18372d]"
-            >
+            <Link href="/recommend" className="hover:text-[#18372d]">
               Style
             </Link>
 
-            <Link
-              href="/closet"
-              className="hover:text-[#18372d]"
-            >
+            <Link href="/closet" className="hover:text-[#18372d]">
               Wardrobe
             </Link>
 
@@ -374,18 +376,16 @@ export default function Home() {
               Recommendation
             </Link>
 
-            <Link
-              href="/analyze"
-              className="hover:text-[#18372d]"
-            >
+            <Link href="/analyze" className="hover:text-[#18372d]">
               Analysis
             </Link>
 
-            <Link
-              href="/chat"
-              className="hover:text-[#18372d]"
-            >
+            <Link href="/chat" className="hover:text-[#18372d]">
               AI Stylist
+            </Link>
+
+            <Link href="/favorites" className="hover:text-[#18372d]">
+              Saved Looks
             </Link>
           </nav>
         </div>
@@ -481,13 +481,17 @@ export default function Home() {
                       <p className="text-xs text-[#786f61]">
                         체감온도
                       </p>
+
                       <p className="mt-1 font-serif text-2xl font-bold">
                         {Math.round(weather.apparentTemperature)}°
                       </p>
                     </div>
 
                     <div className="rounded-2xl bg-[#f8f2e7] p-4">
-                      <p className="text-xs text-[#786f61]">습도</p>
+                      <p className="text-xs text-[#786f61]">
+                        습도
+                      </p>
+
                       <p className="mt-1 font-serif text-2xl font-bold">
                         {weather.humidity}%
                       </p>
@@ -658,7 +662,7 @@ export default function Home() {
                 })}
               </div>
 
-              <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              <div className="mt-7 grid gap-4 sm:grid-cols-3">
                 <Link
                   href="/closet-recommend"
                   className="rounded-2xl bg-[#18372d] px-6 py-4 text-center font-bold text-[#f8f1e2] transition hover:bg-[#244b3f]"
@@ -671,6 +675,13 @@ export default function Home() {
                   className="rounded-2xl border border-[#9f927b] px-6 py-4 text-center font-bold transition hover:border-[#18372d]"
                 >
                   내 옷장 수정하기
+                </Link>
+
+                <Link
+                  href="/favorites"
+                  className="rounded-2xl border border-[#9f927b] px-6 py-4 text-center font-bold transition hover:border-[#18372d]"
+                >
+                  ♡ 저장한 코디 보기
                 </Link>
               </div>
             </>
