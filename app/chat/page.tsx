@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type Message = {
   id: number;
@@ -9,150 +9,19 @@ type Message = {
   content: string;
 };
 
-function createStylingAnswer(question: string) {
-  const text = question.replaceAll(" ", "").toLowerCase();
+type ClothingItem = {
+  id: number;
+  category: string;
+  name: string;
+};
 
-  const isHot =
-    text.includes("덥") ||
-    text.includes("30도") ||
-    text.includes("31도") ||
-    text.includes("32도") ||
-    text.includes("33도") ||
-    text.includes("34도") ||
-    text.includes("35도");
-
-  const isCold =
-    text.includes("춥") ||
-    text.includes("겨울") ||
-    text.includes("영하");
-
-  const isRainy =
-    text.includes("비") ||
-    text.includes("장마") ||
-    text.includes("우산");
-
-  const isDate =
-    text.includes("데이트") ||
-    text.includes("소개팅") ||
-    text.includes("약속");
-
-  const isDepartmentStore =
-    text.includes("백화점") ||
-    text.includes("쇼핑");
-
-  const isWork =
-    text.includes("출근") ||
-    text.includes("회사") ||
-    text.includes("직장");
-
-  const hasBlackShirt =
-    text.includes("검정셔츠") ||
-    text.includes("블랙셔츠") ||
-    text.includes("검은셔츠");
-
-  if (isHot && isRainy) {
-    return `덥고 비가 오는 날에는 통기성과 건조 속도가 중요해요.
-
-추천 코디
-• 상의: 얇은 반팔 또는 린넨 셔츠
-• 하의: 가벼운 반바지나 얇은 팬츠
-• 신발: 물에 강하고 관리가 쉬운 신발
-
-밝은 크림색 하의는 빗물 자국이 눈에 띌 수 있으므로, 흐린 날에는 그레이나 블랙 계열도 좋아요.`;
-  }
-
-  if (isDate && hasBlackShirt) {
-    return `검정 셔츠는 데이트 코디로 충분히 좋아요.
-
-추천 조합
-• 상의: 검정 옥스포드 셔츠
-• 하의: 아이보리 또는 크림 팬츠
-• 신발: 흰색 스니커즈
-• 이너: 깔끔한 흰색 티셔츠
-
-셔츠를 완전히 잠그기보다 자연스럽게 열어 입으면 인상이 부드러워져요.`;
-  }
-
-  if (isDate) {
-    return `데이트라면 단정하면서도 과하게 꾸민 느낌이 나지 않는 조합이 좋아요.
-
-추천 코디
-• 상의: 네이비 또는 검정 셔츠
-• 하의: 크림 팬츠나 깔끔한 슬랙스
-• 신발: 흰색 스니커즈 또는 로퍼
-
-전체 색상은 세 가지 이내로 정리하면 훨씬 세련돼 보여요.`;
-  }
-
-  if (isDepartmentStore) {
-    return `백화점에서는 깔끔함과 편안함을 함께 챙기는 게 좋아요.
-
-추천 코디
-• 상의: 셔츠나 얇은 니트
-• 하의: 플리츠 팬츠 또는 슬랙스
-• 신발: 오래 걸어도 편한 스니커즈
-
-실내 냉방이 강할 수 있으므로 얇은 겉옷도 잘 어울려요.`;
-  }
-
-  if (isWork) {
-    return `출근 코디는 신뢰감 있고 정돈된 색 조합이 좋아요.
-
-추천 코디
-• 상의: 네이비 셔츠
-• 하의: 차콜 또는 검정 슬랙스
-• 신발: 로퍼나 단정한 스니커즈
-
-핏은 너무 크지 않은 세미오버 정도가 안정적이에요.`;
-  }
-
-  if (isHot) {
-    return `기온이 높은 날에는 소재와 통풍을 먼저 고려해야 해요.
-
-추천 코디
-• 상의: 반팔 티셔츠 또는 린넨 셔츠
-• 하의: 반바지나 얇은 와이드 팬츠
-• 신발: 가벼운 스니커즈 또는 샌들
-
-검정색을 입는다면 상하의 중 한쪽만 어둡게 두는 것이 시원해 보여요.`;
-  }
-
-  if (isCold) {
-    return `추운 날에는 보온성을 챙기면서 색을 무겁지 않게 정리해보세요.
-
-추천 코디
-• 상의: 니트 또는 목폴라
-• 하의: 두께감 있는 슬랙스
-• 아우터: 코트나 패딩
-• 신발: 가죽 신발 또는 두꺼운 스니커즈
-
-네이비·브라운·크림 조합은 클래식한 분위기를 내기 좋아요.`;
-  }
-
-  if (hasBlackShirt) {
-    return `검정 셔츠는 활용도가 높은 아이템이에요.
-
-잘 어울리는 하의
-• 아이보리
-• 크림
-• 라이트 그레이
-• 연청 데님
-
-신발은 흰색 스니커즈를 매치하면 깔끔하고, 브라운 로퍼를 신으면 더 클래식해 보여요.`;
-  }
-
-  return `좋은 코디를 추천하려면 상황과 날씨를 조금 더 알려주세요.
-
-예를 들어 이렇게 질문해보세요.
-
-• 오늘 31도인데 백화점 갈 때 뭐 입지?
-• 검정 셔츠에 아이보리 반바지 괜찮아?
-• 비 오는 날 데이트 코디 추천해줘
-• 내 옷장에 있는 옷으로 추천해줘`;
-}
+const STORAGE_KEY = "fitmate-closet-items";
 
 export default function ChatPage() {
   const [input, setInput] = useState("");
+  const [closetItems, setClosetItems] = useState<ClothingItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -162,34 +31,84 @@ export default function ChatPage() {
     },
   ]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    const savedItems = localStorage.getItem(STORAGE_KEY);
+
+    if (!savedItems) {
+      return;
+    }
+
+    try {
+      setClosetItems(JSON.parse(savedItems));
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const trimmedInput = input.trim();
+    const question = input.trim();
 
-    if (!trimmedInput) {
+    if (!question || isLoading) {
       return;
     }
 
     const userMessage: Message = {
       id: Date.now(),
       role: "user",
-      content: trimmedInput,
+      content: question,
     };
 
-    const assistantMessage: Message = {
-      id: Date.now() + 1,
-      role: "assistant",
-      content: createStylingAnswer(trimmedInput),
-    };
-
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      userMessage,
-      assistantMessage,
-    ]);
-
+    setMessages((current) => [...current, userMessage]);
     setInput("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: question,
+          closetItems,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "AI 요청에 실패했어요.");
+      }
+
+      const assistantMessage: Message = {
+        id: Date.now() + 1,
+        role: "assistant",
+        content: data.answer,
+      };
+
+      setMessages((current) => [
+        ...current,
+        assistantMessage,
+      ]);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "AI 답변을 불러오지 못했어요.";
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: Date.now() + 1,
+          role: "assistant",
+          content: `오류가 발생했어요.\n\n${message}`,
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -213,7 +132,7 @@ export default function ChatPage() {
             </h1>
 
             <p className="mt-3 text-[#ddd5c5]">
-              날씨, 장소와 고민 중인 옷을 자유롭게 입력해보세요.
+              현재 등록된 옷 {closetItems.length}개를 함께 참고해 답변합니다.
             </p>
           </header>
 
@@ -228,7 +147,7 @@ export default function ChatPage() {
                 }`}
               >
                 <div
-                  className={`max-w-[85%] whitespace-pre-line rounded-3xl px-5 py-4 leading-7 md:max-w-[72%] ${
+                  className={`max-w-[88%] whitespace-pre-line rounded-3xl px-5 py-4 leading-7 md:max-w-[75%] ${
                     message.role === "user"
                       ? "rounded-br-md bg-[#18372d] text-[#f8f1e2]"
                       : "rounded-bl-md border border-[#c5b69d] bg-white"
@@ -238,6 +157,14 @@ export default function ChatPage() {
                 </div>
               </div>
             ))}
+
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="rounded-3xl rounded-bl-md border border-[#c5b69d] bg-white px-5 py-4 text-[#687169]">
+                  코디를 고민하고 있어요...
+                </div>
+              </div>
+            )}
           </div>
 
           <form
@@ -248,25 +175,25 @@ export default function ChatPage() {
               <input
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="예: 오늘 31도인데 데이트할 때 뭐 입지?"
+                placeholder="예: 내 옷장으로 오늘 백화점 코디 추천해줘"
                 className="min-w-0 flex-1 rounded-2xl border border-[#b9aa90] bg-white px-5 py-4 outline-none transition focus:border-[#18372d]"
               />
 
               <button
                 type="submit"
-                disabled={!input.trim()}
+                disabled={!input.trim() || isLoading}
                 className="rounded-2xl bg-[#d3b16c] px-7 py-4 font-bold text-[#18372d] transition hover:bg-[#e2c789] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                추천받기
+                {isLoading ? "답변 중..." : "추천받기"}
               </button>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {[
+                "내 옷장으로 데이트 코디 추천해줘",
                 "오늘 31도인데 뭐 입지?",
-                "검정 셔츠 코디해줘",
-                "데이트 코디 추천해줘",
-                "비 오는 날 뭐 입지?",
+                "검정 셔츠에 어울리는 하의 추천해줘",
+                "백화점 갈 때 깔끔하게 입고 싶어",
               ].map((example) => (
                 <button
                   key={example}
